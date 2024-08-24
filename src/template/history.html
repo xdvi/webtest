@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestión de Empresas</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+
+<body class="flex flex-col h-screen bg-gray-100 dark:bg-gray-900">
+  <header class="bg-gray-800 p-4 shadow-md">
+    <h1 class="text-white text-lg font-semibold flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mr-2 h-5 w-5">
+        <path d="M6 5v11"></path>
+        <path d="M12 5v6"></path>
+        <path d="M18 5v14"></path>
+      </svg>
+      Gestión de Empresas
+    </h1>
+  </header>
+
+  <main class="flex-1 p-6 overflow-auto">
+    <div class="flex space-x-4 mb-6">
+      <button id="showAll" class="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600">Todos</button>
+      <button id="showOnline" class="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-400">Online</button>
+      <button id="showOffline" class="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-400">Offline</button>
+    </div>
+
+    <div id="enterpriseList" class="space-y-4">
+      <!-- Las empresas se mostrarán aquí -->
+    </div>
+  </main>
+
+  <script>
+    const enterpriseList = document.getElementById('enterpriseList');
+
+    function fetchEnterprise() {
+      fetch('/enterprise')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(enterprises => {
+          if (Array.isArray(enterprises)) {
+            displayEnterprises(enterprises);
+          } else {
+            throw new Error('Datos de empresas no válidos');
+          }
+        })
+        .catch(error => {
+          console.error('Error al obtener datos de empresas:', error);
+          enterpriseList.innerHTML = '<p class="text-red-500">Error al obtener datos de empresas.</p>';
+        });
+    }
+
+    function displayEnterprises(enterprises) {
+      enterpriseList.innerHTML = '';
+
+      if (Array.isArray(enterprises) && enterprises.length > 0) {
+        enterprises.forEach(emp => {
+          const status = emp.status ? 'Online' : 'Offline';
+          const statusClass = emp.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800';
+
+          const listItem = document.createElement('div');
+          listItem.className = `p-4 rounded-lg shadow-sm ${statusClass}`;
+          listItem.innerHTML = `
+            <h3 class="text-lg font-semibold">${emp.name}</h3>
+            <p class="text-sm">${status}</p>
+          `;
+          enterpriseList.appendChild(listItem);
+        });
+      } else {
+        enterpriseList.innerHTML = '<p class="text-gray-500">No se encontraron empresas.</p>';
+      }
+    }
+
+    function filterEnterprises(status) {
+      fetch('/enterprise')
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(enterprises => {
+          if (Array.isArray(enterprises)) {
+            const filtered = status === 'all' ? enterprises : enterprises.filter(emp => emp.status === (status === 'online'));
+            displayEnterprises(filtered);
+          } else {
+            throw new Error('Datos de empresas no válidos');
+          }
+        })
+        .catch(error => {
+          console.error('Error al obtener datos de empresas:', error);
+          enterpriseList.innerHTML = '<p class="text-red-500">Error al obtener datos de empresas.</p>';
+        });
+    }
+
+    document.getElementById('showAll').addEventListener('click', () => filterEnterprises('all'));
+    document.getElementById('showOnline').addEventListener('click', () => filterEnterprises('online'));
+    document.getElementById('showOffline').addEventListener('click', () => filterEnterprises('offline'));
+
+    // Inicialmente mostrar todas las empresas
+    fetchEnterprise();
+  </script>
+</body>
+
+</html>

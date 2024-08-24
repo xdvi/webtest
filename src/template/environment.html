@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cliente WebSocket</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <style>
+    /* Estilo para mensajes */
+    .dark .message {
+      background-color: #2d3748;
+      color: #e2e8f0;
+    }
+
+    .message {
+      background-color: #edf2f7;
+      color: #2d3748;
+    }
+  </style>
+</head>
+
+<body class="flex h-screen bg-gray-100 dark:bg-gray-900">
+  <section class="flex-1 flex flex-col">
+    <header class="border-b border-gray-300 dark:border-gray-700 p-4">
+      <h2 class="text-xl font-bold flex items-center gap-2">
+        <span class="relative flex-shrink-0 w-10 h-10 rounded-full overflow-hidden">
+          <span class="absolute right-0 top-0 flex h-3 w-3 rounded-full bg-green-600"></span>
+          <span class="flex items-center justify-center w-full h-full bg-gray-300 dark:bg-gray-600 text-white rounded-full">U</span>
+        </span>
+        <div>
+          Server<span class="text-xs text-green-600 block" id="statusServer">Online</span>
+        </div>
+      </h2>
+    </header>
+    <main class="flex-1 overflow-auto p-4 space-y-4" id="messagesContainer">
+      <!-- Área para los mensajes del servidor y del usuario -->
+    </main>
+    <footer class="border-t border-gray-300 dark:border-gray-700 p-4">
+      <div class="flex items-center gap-2">
+        <button
+          class="inline-flex items-center justify-center w-10 h-10 rounded-md text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="9" y1="9" x2="9.01" y2="9"></line>
+            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+          </svg>
+        </button>
+        <input id="messageInput"
+          class="flex-1 h-10 rounded-md border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm placeholder-gray-400 dark:placeholder-gray-600"
+          placeholder="Type a message..." />
+        <button id="sendButton"
+          class="bg-blue-500 text-white h-10 px-4 py-2 rounded-md hover:bg-blue-600 focus:outline-none">
+          Send
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <script>
+    const ws = new WebSocket('ws://localhost:8080');
+    const messagesContainer = document.getElementById('messagesContainer');
+    const statusServer = document.getElementById('statusServer');
+
+    ws.onopen = () => {
+      console.log('Conectado al servidor WebSocket');
+      statusServer.innerText = 'Online';
+    };
+
+    ws.onmessage = (event) => {
+      const messageDiv = document.createElement('div');
+      messageDiv.classList.add('flex', 'items-end', 'gap-2');
+      messageDiv.innerHTML = `
+        <div class="message rounded-lg p-2 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+          <p class="text-sm">${event.data}</p>
+        </div>
+      `;
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight; // Desplaza hacia abajo para mostrar el nuevo mensaje
+    };
+
+    ws.onclose = () => {
+      console.log('Desconectado del servidor WebSocket');
+      statusServer.innerText = 'Offline';
+    };
+
+    ws.onerror = (error) => {
+      console.error('Error en WebSocket:', error);
+    };
+
+    document.getElementById('sendButton').addEventListener('click', () => {
+      const input = document.getElementById('messageInput');
+      if (input.value.trim()) {
+        // Mostrar el mensaje del usuario en la interfaz
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('flex', 'items-end', 'gap-2', 'justify-end');
+        messageDiv.innerHTML = `
+          <div class="message rounded-lg bg-blue-500 text-white p-2">
+            <p class="text-sm">${input.value.trim()}</p>
+          </div>
+        `;
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight; // Desplaza hacia abajo para mostrar el nuevo mensaje
+
+        // Enviar el mensaje al servidor
+        ws.send(input.value.trim());
+        input.value = '';
+      }
+    });
+  </script>
+</body>
+
+</html>

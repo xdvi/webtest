@@ -1,0 +1,16 @@
+{
+  "enterprise": [
+    {
+      "id": 1,
+      "name": "DISTRILICORES",
+      "dateCreated": "2024-08-24T04:35:02.777Z",
+      "status": true
+    },
+    {
+      "id": 2,
+      "name": "COBRANZA 1",
+      "dateCreated": "2024-08-24T04:35:02.777Z",
+      "status": false
+    }
+  ]
+}
